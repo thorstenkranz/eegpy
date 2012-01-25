@@ -48,6 +48,7 @@ Things to know:
 """
 
 __docformat__ = "restructuredtext en"
+__version__ = "0.1-dev"
 
 
 from eegpy.formats.open_eeg import open_eeg
