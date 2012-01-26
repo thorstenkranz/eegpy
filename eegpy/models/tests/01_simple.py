@@ -11,6 +11,7 @@ from eegpy.filter.freqfilt import filtfilt_band
 from eegpy.filter.smoothing import smooth
 from eegpy.models.eegbold import Hrf2d
 import cPickle
+import nose
 
 import pylab as p
 from eegpy.analysis.wavelet import wt_power_baseline

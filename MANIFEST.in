@@ -1,5 +1,5 @@
 include *.txt *.py
-recursive-include eegpy *.rst *.py
+recursive-include eegpy *.rst *.py *.png
 graft doc
 graft doc/_static
 graft doc/_templates

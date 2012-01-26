@@ -3,7 +3,7 @@
 from distutils.core import setup
 import sys
 
-import pylocator 
+import eegpy 
 
 
 # For some commands, use setuptools
@@ -19,8 +19,8 @@ if not 'extra_setuptools_args' in globals():
     extra_setuptools_args = dict()
 
 
-setup(name='pylocator',
-      version=pylocator.__version__,
+setup(name='eegpy',
+      version=eegpy.__version__,
       summary='Library for the analysis of EEG and MEG.',
       author='Thorsten Kranz',
       author_email='thorstenkranz@gmail.com',
@@ -43,8 +43,30 @@ setup(name='pylocator',
           'Topic :: Utilities',
       ],
       platforms='any',
-      #package_data={'pylocator': ['image_reader.glade','camera.png'],},
-      packages=['eegpy'],
+      package_data={
+          'eegpy.ui.viewer': ['images/*_32.png'],
+          'eegpy.plot' : ['sample_locs/*.ced','sample_locs/*,locs'] 
+                    },
+      packages=['eegpy',
+                'eegpy.analysis',
+                'eegpy.analysis.entropy',
+                'eegpy.analysis.mvpa',
+                'eegpy.cnn',
+                'eegpy.computing',
+                'eegpy.filter',
+                'eegpy.formats',
+                'eegpy.models',
+                'eegpy.plot',
+                'eegpy.stats',
+                'eegpy.study',
+                'eegpy.tools',
+                'eegpy.ui',
+                'eegpy.ui.icon',
+                'eegpy.ui.tools',
+                'eegpy.ui.viewer',
+                'eegpy.ui.widgets',
+                'eegpy.ui',
+                ],
       #scripts=['bin/pylocator'],
       **extra_setuptools_args)
 
