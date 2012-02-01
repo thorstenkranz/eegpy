@@ -6,6 +6,8 @@ from eegpy.misc import FATALERROR
 import pickle
 import sys
 import tempfile
+import re
+
 
 try:
     import pylab as P
@@ -380,3 +382,34 @@ def ksprobi(n1,n2,prob):
 def cm2in(length):
     """Convert cm to inches, used for pylab"""
     return length*.393700787
+
+def sort_nicely(l):
+    """ Sort the given list in the way that humans expect.
+
+        Example:
+
+        .. sourcecode:: ipython
+
+            In [1]: from eegpy.helper import sort_nicely
+            In [2]: l = ["image9.jpg","image10.jpg"]
+            In [3]: l.sort()
+            In [4]: l
+            Out[4]: ['image10.jpg', 'image9.jpg']
+            In [5]: sort_nicely(l)
+            In [6]: l
+            Out[6]: ['image9.jpg', 'image10.jpg']
+        
+    """
+    def tryint(s):
+        try:
+            return int(s)
+        except:
+            return s
+        
+    def alphanum_key(s):
+        """ Turn a string into a list of string and number chunks.
+            "z23a" -> ["z", 23, "a"]
+        """
+        return [ tryint(c) for c in re.split('([0-9]+)', s) ]
+
+    l.sort(key=alphanum_key)

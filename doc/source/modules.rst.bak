@@ -1,0 +1,42 @@
+Modules
+============= 
+
+This is the index of our modules
+
+eegpy
+=====
+
+.. autosummary::
+   :toctree: generated
+
+   eegpy
+
+.. the rest of the modules are relative to the top-level
+.. currentmodule:: eegpy
+
+Basic Facilities
+=================
+
+.. autosummary::
+   :toctree: generated
+
+   eegpy.misc
+   eegpy.helper
+
+Event handling
+=================
+
+.. autosummary::
+   :toctree: generated
+
+   eegpy.events
+
+Analysis of time-series data
+============================
+.. autosummary::
+   :toctree: generated
+
+   eegpy.analysis
+   eegpy.analysis.wavelet
+   eegpy.filter
+

@@ -170,6 +170,8 @@ class EventTable(EegpyBase):
         """Manually add a triggers of type key at time t to EventTable.
         The timepoint must be provided in the present time-transformation and 
         are back-transformed included in the _ur_eventdict"""
+        if not type(t) == int:
+            raise ValueError("t must be integer")
         if not self._ur_eventdict.has_key(key):
             self._ur_eventdict[key] = []
         #if self._ur_eventdict.has_key(key):

@@ -5,7 +5,7 @@ on a schematic head surface.
 
 
 """
-__docformat__ = "restructuredtext en"
+__docformat__ = "restructuredtext"
 
 #################
 # Module-Import #
@@ -41,7 +41,7 @@ def plot_head_topography(topography, sensorlocations, plotsensors=False,
 The sensor locations are first projected onto the best fitting sphere and
 finally projected onto a circle (by simply ignoring the z-axis).
 
-:Parameters:
+Parameters:
     topography: array
         A vector of some values corresponding to each sensor.
     sensorlocations: (nsensors x 3) array
@@ -63,11 +63,11 @@ finally projected onto a circle (by simply ignoring the z-axis).
         axes to plot to. Standard is pylab.
     view: one of 'top' and 'rear'
         Defines from where the head is viewed.
-    **kwargs:
+    kwargs:
         All additional arguments will be passed to `P.imshow()`.
 
 
-:Returns:
+Returns:
   (map, head, sensors)
     The corresponding matplotlib objects are returned if plotted, ie.
     if plothead is set to `False`, head will be `None`.
@@ -180,45 +180,34 @@ def plot_head_connectivity(connectivity, sensorlocations, plotsensors=False,
                        plothead_kwargs=None,  ax=P, view='top', **kwargs):
     """Plot connectivity on a head surface, derived from some sensor locations.
 
-    The sensor locations are first projected onto the best fitting sphere and
-    finally projected onto a circle (by simply ignoring the z-axis).
+        The sensor locations are first projected onto the best fitting sphere and
+        finally projected onto a circle (by simply ignoring the z-axis).
 
-    :Parameters:
-      connectivity: matrix
-        A matrix of some values corresponding to each sensor-combination.
-      sensorlocations: (nsensors x 3) array
-        3D coordinates of each sensor. The order of the sensors has to match
-        with the `connectivity` matrix.
-      plotsensors: bool
-        If True, sensor will be plotted on their projected coordinates.
-        No sensor are shown otherwise.
-      plothead: bool
-        If True, a head outline is plotted.
-      plothead_kwargs: dict
-        Additional keyword arguments passed to `plot_head_outline()`.
-      vmin,vmax: float
-        Minimum and maximum value to be used for graphics.
-      ax: mpl axes
-        axes to plot to. Standard is pylab.
-      view: one of 'top' and 'rear'
-        Defines from where the head is viewed.
-      **kwargs:
-        All additional arguments will be passed to `P.imshow()`.
+        :param connectivity: Connectivity matrix
+        :type connectivity: matrix
+        :param sensorlocations: array (nsensors x 3), 3D coordinates of each sensor. The order of the sensors has to match with the `connectivity` matrix.
+        :param plotsensors: bool; if True, sensor will be plotted on their projected coordinates. No sensors are shown otherwise.
+        :param plothead: bool; If True, a head outline is plotted.
+        :param plothead_kwargs: Additional keyword arguments passed to `plot_head_outline()`.
+        :param vmin,vmax: Minimum and maximum value to be used for graphics.
+        :param ax: matplotlib axes to plot to. Standard is pylab.
+        :param view: one of 'top' and 'rear'; Defines from where the head is viewed.
+        :param kwargs: All additional arguments will be passed to `P.imshow()`.
+        :returns: (map, head, sensors)
 
-
-    :Returns:
-      (map, head, sensors)
-        The corresponding matplotlib objects are returned if plotted, ie.
+        The corresponding matplotlib objects are returned if plotted, i.e.,
         if plothead is set to `False`, head will be `None`.
 
           map
             The colormap that makes the actual plot, a
             matplotlib.image.AxesImage instance.
           head
-            What is returned by `plot_head_outline()`.
+            What is returned by :py:meth:`plot_head_outline`.
           sensors
             The dots marking the electrodes, a matplotlib.lines.Line2d
             instance.
+
+        ..seealso: :py:meth:`plot_head_topography`
     """
     #Some assertions:
     assert len(connectivity.shape)==2 and connectivity.shape[0]==connectivity.shape[1], "connectivity must be a quadratic matrix"
@@ -361,7 +350,7 @@ def plot_head_outline(scale=1, shift=(0, 0), color='k', linewidth='3', ax=P, vie
         axes to plot to. Standard is pylab.
       view: one of 'top' and 'rear'
         Defines from where the head is viewed.
-      **kwargs:
+      kwargs:
         All additional arguments are passed to `P.plot()`.
 
     :Returns:
