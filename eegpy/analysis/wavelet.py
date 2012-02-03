@@ -1,5 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+"""
+Analysis of data with wavelets
+
+Partly custom methods, e.g., for Morlet Wavelets;
+patly used implementation from pywt!"""
 
 from eegpy.helper import fconv, demean, taper, is_power_of_2
 

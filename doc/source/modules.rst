@@ -10,6 +10,7 @@ eegpy
    :toctree: generated
 
    eegpy
+   eegpy.events
    eegpy.helper
    eegpy.analysis
    eegpy.analysis.wavelet
