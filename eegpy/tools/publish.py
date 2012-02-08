@@ -3,8 +3,6 @@ import tempfile
 from ftplib import FTP
 from collections import namedtuple
 
-__all__ = [uploadfig]
-
 def uploadfig(pylab_module, upload_configuration,dpi=150):
     """Upload plot to some server
     
@@ -21,7 +19,7 @@ def uploadfig(pylab_module, upload_configuration,dpi=150):
     #fh.close()
     p.savefig(fn,dpi=dpi)
     if upload_configuration.protocol.upper() == "FTP":
-        uploadfig_ftp(fn,upload_configuration)
+        _uploadfig_ftp(fn,upload_configuration)
 
 def _uploadfig_ftp(fn, upload_configuration):
     uc = upload_configuration
@@ -29,6 +27,8 @@ def _uploadfig_ftp(fn, upload_configuration):
     ftp.login(uc.username,uc.pwd)
     ftp.cwd(uc.directory)
     ftp.storbinary("STOR " + os.path.split(fn)[1], open(fn,"rb"),1024)
+
+__all__ = [uploadfig]
 
 if __name__=="__main__":
     import pylab as p
