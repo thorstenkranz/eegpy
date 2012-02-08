@@ -4,7 +4,7 @@
 Analysis of data with wavelets
 
 Partly custom methods, e.g., for Morlet Wavelets;
-patly used implementation from pywt!"""
+partly used implementation from pywt!"""
 
 from eegpy.helper import fconv, demean, taper, is_power_of_2
 
@@ -22,7 +22,16 @@ convolve = fconv #n.convolve #Choose which convolution to use: n.convolve oder f
 
 #---- Analyse mit Morlet-Wavelet 
 def make_wavelets(freqs,Fs=1000.0,wtSampleWidth=0.8):
-    """Creates a set of Morlet-wavelets for analysis"""
+    """
+    Creates a set of Morlet-wavelets for analysis
+
+    :param freqs: 1-d array of center frequencies
+    :type freqs: array-like
+    :param Fs: Sampling frequency
+    :type Fs: float
+    :param wtSampleWidth: time span for which the wavelets are sampled.
+    :type wtSampleWidth: float
+    """
     
     assert len(freqs)>0, "freqs must be an iterable object containing the frequencies"
     assert Fs > 0.0, "Fs, the sampling rate, must be larger than zero"
@@ -39,8 +48,43 @@ def make_wavelets(freqs,Fs=1000.0,wtSampleWidth=0.8):
     return w
 
 def wt_analyze(x,freqs=None,Fs=1000.0,wtSampleWidth=0.8):
-    """Analyzes a given dataset via wavelet-analyis. Returns an 2d-Array, with the timeserieses
-at the frequencies specified by freqs"""
+    """
+    Analyzes a given dataset via wavelet-analyis. 
+
+    :param x: input array
+    :type x: array-like
+    :param freqs: 1-d array of center frequencies
+    :type freqs: array-like
+    :param Fs: Sampling frequency
+    :type Fs: float
+    :param wtSampleWidth: time span for which the wavelets are sampled.
+    :type wtSampleWidth: float
+
+    .. hint::
+
+        .. plot:: 
+            :include-source:
+
+            import matplotlib.pyplot as p
+            import numpy as np
+            from eegpy.analysis.wavelet import wt_analyze
+
+            Fs = 100. 
+            F_sin = 5.
+            freqs = np.arange(1,10)
+
+            ts = np.arange(0,10,1/Fs)
+            ys = np.sin(2*np.pi*F_sin*ts)
+            wts = wt_analyze(ys,freqs=freqs,Fs=Fs)
+            power = abs(wts)**2
+
+            p.subplot(211)
+            p.plot(ts,ys)
+            p.title("Sine wave, %.1f Hz, and corr. power"%F_sin)
+            p.subplot(212)
+            p.imshow(power.T,aspect="auto",interpolation="nearest",
+                        extent=[0,10,0.5,9.5])
+    """
 
     assert len(x)>0, "x must be an array containing the data"
     if not freqs==None:
@@ -60,11 +104,18 @@ at the frequencies specified by freqs"""
     return rv
 #---- Analyse mit Morlet-Wavelet - Ende
 
-def wt_power_baseline(x,freqs=None,Fs=1000.0,baseline=slice(800,1000),style="dB",wtSampleWidth=0.8):
-    """Convenience-function to automatically perform baseline-correction for 
-    Morlet-wavelet power-analysis
-    style: "dB", "fraction"
-      Which output style to use"""
+def wt_power_baseline(x,freqs=None,Fs=1000.0,baseline=slice(800,1000),method="dB",wtSampleWidth=0.8):
+    """
+    Convenience-function to automatically perform baseline-correction for 
+    Morlet-wavelet power-analysis.
+
+    :param baseline: baseline interval
+    :type baseline: slice
+    :param method: "dB" or "fraction". Which output style to use. "fraction" divides 
+    every power value by the average power in the baseline interval, "dB" additionally performs log-scaling according
+    :type method: string
+
+    """
     wt_power = abs(wt_analyze(x,freqs,Fs,wtSampleWidth))**2
     wt_power /= wt_power[baseline,:].mean(axis=0).reshape(1,-1).repeat(wt_power.shape[0],axis=0)
     if style=="dB":

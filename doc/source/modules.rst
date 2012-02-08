@@ -10,6 +10,10 @@ eegpy
    :toctree: generated
 
    eegpy
+
+.. autosummary::
+   :toctree: generated
+
    eegpy.events
    eegpy.helper
    eegpy.analysis
