@@ -15,7 +15,7 @@ body {
     padding: 0;
     border: 1px solid #aaa;
 
-    margin: 0px 80px 0px 80px;
+    margin: 0px 30px 0px 30px;
     min-width: 740px;
 }
 
@@ -509,3 +509,7 @@ ul.keywordmatches li.goodmatch a {
 img {  
     border-style: none;
 }
+p.logo {
+	text-align: center;
+}
+

@@ -20,6 +20,8 @@ except ImportError, e:
 
 convolve = fconv #n.convolve #Choose which convolution to use: n.convolve oder fconv
 
+__all__=["make_wavelets","wt_analyze","wt_power_baseline"]
+
 #---- Analyse mit Morlet-Wavelet 
 def make_wavelets(freqs,Fs=1000.0,wtSampleWidth=0.8):
     """
@@ -70,19 +72,23 @@ def wt_analyze(x,freqs=None,Fs=1000.0,wtSampleWidth=0.8):
             from eegpy.analysis.wavelet import wt_analyze
 
             Fs = 100. 
-            F_sin = 5.
+            F_sin1 = 3.
+            F_sin2 = 7.
             freqs = np.arange(1,10)
 
             ts = np.arange(0,10,1/Fs)
-            ys = np.sin(2*np.pi*F_sin*ts)
+            ys = np.zeros((Fs*10))
+            ys[:Fs*10/2] = np.sin(2*np.pi*F_sin1*ts[:Fs*10/2])*np.hanning(Fs*10/2)
+            ys[Fs*10/2:] = np.sin(2*np.pi*F_sin2*ts[:Fs*10/2])*np.hanning(Fs*10/2) * 2
             wts = wt_analyze(ys,freqs=freqs,Fs=Fs)
             power = abs(wts)**2
 
             p.subplot(211)
             p.plot(ts,ys)
-            p.title("Sine wave, %.1f Hz, and corr. power"%F_sin)
+            p.title(r"$F_1=%.1f, \; F_2=%.1f$"%(F_sin1,F_sin2))
             p.subplot(212)
             p.imshow(power.T,aspect="auto",interpolation="nearest",
+                        origin="lower",
                         extent=[0,10,0.5,9.5])
     """
 
@@ -106,15 +112,12 @@ def wt_analyze(x,freqs=None,Fs=1000.0,wtSampleWidth=0.8):
 
 def wt_power_baseline(x,freqs=None,Fs=1000.0,baseline=slice(800,1000),method="dB",wtSampleWidth=0.8):
     """
-    Convenience-function to automatically perform baseline-correction for 
-    Morlet-wavelet power-analysis.
+    Convenience-function to automatically perform baseline-correction for Morlet-wavelet power-analysis.
 
     :param baseline: baseline interval
     :type baseline: slice
-    :param method: "dB" or "fraction". Which output style to use. "fraction" divides 
-    every power value by the average power in the baseline interval, "dB" additionally performs log-scaling according
+    :param method: "dB" or "fraction". Which output style to use. "fraction" divides every power value by the average power in the baseline interval, "dB" additionally performs log-scaling according
     :type method: string
-
     """
     wt_power = abs(wt_analyze(x,freqs,Fs,wtSampleWidth))**2
     wt_power /= wt_power[baseline,:].mean(axis=0).reshape(1,-1).repeat(wt_power.shape[0],axis=0)

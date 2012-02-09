@@ -1,26 +1,31 @@
-Modules
-============= 
+*********************
+Module Overview
+*********************
 
 This is the index of our modules
 
-eegpy
-=====
+General tools, utilities
+------------------------
 
 .. autosummary::
    :toctree: generated
 
    eegpy
+   eegpy.events
+   eegpy.helper
+   eegpy.tools.publish
+
+Filtering and analysis
+----------------------
 
 .. autosummary::
    :toctree: generated
 
-   eegpy.events
-   eegpy.helper
    eegpy.analysis
    eegpy.analysis.wavelet
 
 Plotting
-=========
+--------
 .. autosummary::
   :toctree: generated
 

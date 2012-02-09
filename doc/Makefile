@@ -36,9 +36,10 @@ clean:
 generate: generate-stamp
 generate-stamp:
 	mkdir -p $(BUILDDIR)
-	@PYTHONPATH=$(CURDIR)/sphinxext:$(CURDIR)/..:$(PYTHONPATH) \
-		$(PYTHON) sphinxext/autosummary/generate.py \
-		-t $(CURDIR)/templates -o source/generated source/modules.rst
+	#@PYTHONPATH=$(CURDIR)/sphinxext:$(CURDIR)/..:$(PYTHONPATH) \
+	#	$(PYTHON) sphinxext/autosummary/generate.py \
+	#	-t $(CURDIR)/templates -o source/generated source/modules.rst
+	sphinx-autogen -t $(CURDIR)/templates -o source/generated source/modules.rst
 	# wipe everything that is not eegpy to prevent suffering from the bugs
 	# of other in subsequent stages
 	#find source/generated -type f ! -name 'eegpy*' -delete

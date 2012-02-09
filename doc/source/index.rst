@@ -1,5 +1,6 @@
+*********************************
 Welcome to eegpy's documentation!
-======================================
+*********************************
 
 eegpy is intended to simplify the processing and analysis of EEG (Electroencephalography) and similar data
 in a free environment (free like beer AND speech). 
