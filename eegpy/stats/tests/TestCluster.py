@@ -27,6 +27,7 @@ class TestEvents:
 
     def setUp(self):
         self.data_with_one_cluster = [ar.copy() for ar in data_with_one_cluster] 
+        self.data_without_cluster = [ar.copy() for ar in data_without_cluster] 
 
     def tearDown(self):
         pass
@@ -39,10 +40,18 @@ class TestEvents:
         cl1d = ClusterSearch1d(self.data_with_one_cluster,num_surrogates=100)
         #act
         results = cl1d.search()        
+        cluster = results[1][0]
         #assert
         assert len(results[1]) == 1
-        cluster = results[1][0]
         assert cluster[0]>40
         assert cluster[1]<60
 
+    def test_FindNoCluster(self):
+        #arange
+        cl1d = ClusterSearch1d(self.data_without_cluster,num_surrogates=100)
+        #act
+        results = cl1d.search()        
+        #assert
+        assert len(results[1]) == 0
+        assert results[4].min()>0.05
         
