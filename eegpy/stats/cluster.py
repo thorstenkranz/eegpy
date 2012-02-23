@@ -20,6 +20,9 @@ from eegpy.helper import fprobi
 class ClusterSearch1d:
     """Search for clusters in 1d-data"""
 
+    array_list_error_message = "array_list must be a list of 2d-arrays: dim1 is time, dim2 repetitions"
+    num_surrogates_error_message = "num_surrogates must be a positive integer"
+
     def __init__(self,array_list,stat_fun=None,threshold=1.67,num_surrogates=1000):
         """Initialization
 
@@ -33,7 +36,17 @@ class ClusterSearch1d:
              num_surrogates: int
                number of permutation-surrogates to use for testing
         """
-        #TODO: Do some checks
+        #Some checks
+        try:
+            for ar in array_list:
+                if not len(ar.shape) == 2:
+                    raise ValueError(self.array_list_error_message)
+        except Exception, e:
+            raise ValueError(self.array_list_error_message)
+        if not num_surrogates>0 or type(num_surrogates)!=int:
+            raise ValueError(self.num_surrogates_error_message)
+
+
         self._al = array_list
         if stat_fun==None:
             self._sf = self.f_oneway

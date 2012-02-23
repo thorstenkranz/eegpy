@@ -1,7 +1,7 @@
 import numpy as np
 from numpy.testing import (assert_array_almost_equal,
                                    assert_array_equal)
-from nose.tools import assert_true, assert_equal, assert_raises
+from nose.tools import assert_true, assert_equal, assert_raises, raises
 
 from eegpy.stats.cluster import ClusterSearch1d
 from eegpy.filter.smoothing import smooth
@@ -23,7 +23,7 @@ data_without_cluster = make_data_without_cluster()
 data_with_one_cluster = make_data_with_one_cluster()
 
 #Actual test fixture
-class TestEvents:
+class TestClusterSearch1d:
 
     def setUp(self):
         self.data_with_one_cluster = [ar.copy() for ar in data_with_one_cluster] 
@@ -35,7 +35,7 @@ class TestEvents:
     #def test_CreateBlankEventTable (self):
     #    assert_true( self.evt!=None ) 
 
-    def test_FindOneCluster(self):
+    def test_DataWithOneClusterFindOneCluster(self):
         #arange
         cl1d = ClusterSearch1d(self.data_with_one_cluster,num_surrogates=100)
         #act
@@ -46,12 +46,30 @@ class TestEvents:
         assert cluster[0]>40
         assert cluster[1]<60
 
-    def test_FindNoCluster(self):
+    def test_DataWithNoClusterFindNoCluster(self):
         #arange
         cl1d = ClusterSearch1d(self.data_without_cluster,num_surrogates=100)
         #act
         results = cl1d.search()        
         #assert
         assert len(results[1]) == 0
-        assert results[4].min()>0.05
-        
+        assert results[4].min()>0.01
+
+    @raises(ValueError)
+    def test_Cluster1dForArrayListNotAList(self):
+        data = self.data_with_one_cluster[0]
+        cl1d = ClusterSearch1d(data)
+
+    @raises(ValueError)
+    def test_Cluster1dFor1dArrays(self):
+        data = [d[:,0] for d in self.data_with_one_cluster]
+        cl1d = ClusterSearch1d(data)
+
+    @raises(ValueError)
+    def test_Cluster1dForZeroSurrogates(self):
+        cl1d = ClusterSearch1d(self.data_with_one_cluster[0],num_surrogates=0)
+
+    @raises(ValueError)
+    def test_Cluster1dForNegativeNumberOfSurrogates(self):
+        cl1d = ClusterSearch1d(self.data_with_one_cluster[0],num_surrogates=-10)
+
