@@ -11,11 +11,6 @@ import re
 
 
 try:
-    import pylab as P
-except Exception,e:
-    print "helper.py: Cannot import pylab. I continue, let's see what happens"
-
-try:
     import numpy as np
     from numpy.fft import fft, ifft
     from scipy.interpolate import splrep,splev,interp1d
