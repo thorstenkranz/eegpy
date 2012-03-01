@@ -206,12 +206,13 @@ class PredictNightsResultWithSurrogates(EegpyBase):
     def num_hits(self,night=1,thres=0.7,zscored=True):
         """Returns total number of hits. 
         Threshold for this decision is thres. If None, take number of classifiers"""
-        rv = []
         hits_per_label = self.num_hits_per_label(night,thres,zscored)
-        for i_surr in range(self.num_surrogates+1):
-            real_hits = [hits_per_label[i_surr][k] for k in hits_per_label.keys() if k != 0.0]
-            rv.append(np.sum(real_hits))
-        return np.array(rv)
+        rv = np.zeros(hits_per_label.shape)
+        for i, d in enumerate(hits_per_label):
+            keys = d.keys()
+            keys.sort()
+            rv = [np.sum(d[k]) for k in keys]
+        return rv
 
     @property
     def num_surr(self):
