@@ -138,7 +138,8 @@ class PredictNightsResultSingleClassifier(EegpyBase):
 class PredictNightsResultWithSurrogates(EegpyBase):
     """Object for analyzing results from classifier-predictions for nights.
     In contrast to PredictNightsResult, used for only ONE classifier.
-    It stores the probabilities for each class for each prediction"""
+    It stores the probabilities for each class for each prediction
+    Offers infrastructure to analyze data for surrogates as well"""
     def __init__(self,num_classes,num_surrogates,num_wins_n1,num_wins_n2,art_thr=7.0,art_thr_diff=7.5):
         self.log = ""
         self.cv_confusions = None # Confusion matrix from CrossValidation on the experiment-data
