@@ -42,7 +42,15 @@ def load(fn):
         print "Cannot load object from disk, ", e 
 
 def fconv(x,h):
-    """Implements the fast convolution"""
+    """Implements the fast convolution
+    
+    :param x: Array one
+    :type x: array
+    :param h: Array two
+    :type h: array
+
+    :returns: convolved array    
+    """
     Ly=len(x)+len(h)-1
     Ly2=int(2**(nextpow2(Ly)))       # Find smallest power of 2 that is > Ly
     X=fft(x, Ly2)                # Fast Fourier transform
@@ -50,7 +58,10 @@ def fconv(x,h):
     Y=X*H                      # 
     y=(ifft(Y, Ly2))#.real      # Inverse fast Fourier transform
     y=y[0:Ly]               # Take just the first N elements
-    return y
+    if x.dtype==np.double:
+        return y.real
+    else:
+        return y
     #y=y/max(abs(y));           # Normalize the output
     
 def nextpow2(x):
