@@ -3,7 +3,7 @@ import time
 from numpy.testing import (assert_array_almost_equal,
                                    assert_array_equal)
 from nose.tools import assert_true, assert_equal, assert_raises
-from eegpy.helper import fconv
+from eegpy.helper import fconv, nextpow2
 
 def test_fconv_for_random_arrays():
     x = np.random.random((128))
@@ -42,4 +42,9 @@ def test_fconv_returns_double_when_input_is_double():
     res = fconv(x,y)
     assert_true(res.dtype==np.double)
 
+def test_nextpow2():
+    for x, np2 in [(3,4),(5,8),(33,64),(170,256)]:
+        yield check_nextpow2, x, np2
 
+def check_nextpow2(x,np2):
+    return nextpow2(x)==np2
