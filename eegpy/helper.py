@@ -77,6 +77,8 @@ def nextpow2(x):
     :param x: Number for which the next power of 2 should be found.
     :type x: float or int
     """
+    if x<0:
+        raise ValueError("x must be non-negative")
     return np.ceil(np.log(x)/np.log(2))
 
 def is_power_of_2(x):

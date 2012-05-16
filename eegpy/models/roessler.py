@@ -300,12 +300,14 @@ class TwoStochasticRoessler(TwoRoessler):
 
         
 
-if __name__ == "__main__":
-    import matplotlib as mpl
-    from mpl_toolkits.mplot3d import Axes3D
-    import matplotlib.pyplot as plt
+#if __name__ == "__main__":
+    #import matplotlib as mpl
+    #from mpl_toolkits.mplot3d import Axes3D
+    #import matplotlib.pyplot as plt
 
-    mpl.rcParams['legend.fontsize'] = 10
+    #mpl.rcParams['legend.fontsize'] = 10
+    ############################
+
 
     ##Test 1: Zwei unabhängige Rössler
     #fig = plt.figure(1)
@@ -453,11 +455,11 @@ if __name__ == "__main__":
     ##plt.show()
 
     #Test 7: Two Roessler, one with damping, transient coupling
-    roe = NRoesslerTransientCouplings(omegasOrN=np.array([1.0,3.0]),es=np.array([[0,0.0],[3.5,0]]),as_=[0.165,-0.05],transient_couplings=[(300,350,1.)])
-    v = roe.integrate(np.arange(10,1000,0.5))
-    p.plot(np.arange(10,1000,0.5),v[:,0],"b")
-    p.plot(np.arange(10,1000,0.5),v[:,3]-30,"r")
-    p.plot(np.arange(10,1000,0.5),v[:,4]-50,"r")
-    p.plot(np.arange(10,1000,0.5),v[:,5]-70,"r")
+    #roe = NRoesslerTransientCouplings(omegasOrN=np.array([1.0,3.0]),es=np.array([[0,0.0],[3.5,0]]),as_=[0.165,-0.05],transient_couplings=[(300,350,1.)])
+    #v = roe.integrate(np.arange(10,1000,0.5))
+    #p.plot(np.arange(10,1000,0.5),v[:,0],"b")
+    #p.plot(np.arange(10,1000,0.5),v[:,3]-30,"r")
+    #p.plot(np.arange(10,1000,0.5),v[:,4]-50,"r")
+    #p.plot(np.arange(10,1000,0.5),v[:,5]-70,"r")
 
 

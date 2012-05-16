@@ -363,31 +363,31 @@ if __name__=="__main__":
     #p.xlim(10,509)
     
     #Test 4: HRF-Modell-Grid
-    nnodes=49#20
-    positions = np.zeros((49,2))
-    for i in range(49):
-        x=i/7
-        y=i%7
-        positions[i,0] = x*1
-        positions[i,1] = y*1
-    hrfm = Hrf2d(n_nodes=nnodes,positions=positions,input_bands=[(0.5,1.0,1.0)],C=1,L=1,tau=50)
-    ar = hrfm.integrate(np.arange(10,1010,0.1))#[:,nnodes/2]
+    #nnodes=49#20
+    #positions = np.zeros((49,2))
+    #for i in range(49):
+    #    x=i/7
+    #    y=i%7
+    #    positions[i,0] = x*1
+    #    positions[i,1] = y*1
+    #hrfm = Hrf2d(n_nodes=nnodes,positions=positions,input_bands=[(0.5,1.0,1.0)],C=1,L=1,tau=50)
+    #ar = hrfm.integrate(np.arange(10,1010,0.1))#[:,nnodes/2]
 
-    p.subplot(3,1,1)
-    pd1 = hrfm._signal_rstc[:]+np.arange(0,nnodes*15,15).reshape(1,-1).repeat(hrfm._signal_rstc.shape[0],axis=0)
-    p.plot(np.arange(10,1010,0.1),pd1)
-    p.xlim(10,1009)
-    p.ylim(pd1[500:].min(),pd1[500:].max())
-    p.subplot(3,1,2)
-    p.plot(np.arange(10,1010,0.1),ar[:,::2])#nnodes/2*2])#+np.arange(0,nnodes*2*15,15).reshape(1,-1).repeat(ar.shape[0],axis=0))
-    p.xlim(10,1009)
-    p.ylim(ar[500:,::2].min(),ar[500:,::2].max())
-    p.subplot(3,1,3)
-    wt_power = wt_power_baseline(hrfm._signal_rstc[:,nnodes/2],freqs=np.arange(0.1,1.5,0.05),Fs=10.,baseline=slice(1500,1800),wtSampleWidth=20)
-    vmin = scoreatpercentile(wt_power[ar.shape[0]/4*1:ar.shape[0]/4*3].flatten(),5)
-    vmax = scoreatpercentile(wt_power[ar.shape[0]/4*1:ar.shape[0]/4*3].flatten(),95)
+    #p.subplot(3,1,1)
+    #pd1 = hrfm._signal_rstc[:]+np.arange(0,nnodes*15,15).reshape(1,-1).repeat(hrfm._signal_rstc.shape[0],axis=0)
+    #p.plot(np.arange(10,1010,0.1),pd1)
+    #p.xlim(10,1009)
+    #p.ylim(pd1[500:].min(),pd1[500:].max())
+    #p.subplot(3,1,2)
+    #p.plot(np.arange(10,1010,0.1),ar[:,::2])#nnodes/2*2])#+np.arange(0,nnodes*2*15,15).reshape(1,-1).repeat(ar.shape[0],axis=0))
+    #p.xlim(10,1009)
+    #p.ylim(ar[500:,::2].min(),ar[500:,::2].max())
+    #p.subplot(3,1,3)
+    #wt_power = wt_power_baseline(hrfm._signal_rstc[:,nnodes/2],freqs=np.arange(0.1,1.5,0.05),Fs=10.,baseline=slice(1500,1800),wtSampleWidth=20)
+    #vmin = scoreatpercentile(wt_power[ar.shape[0]/4*1:ar.shape[0]/4*3].flatten(),5)
+    #vmax = scoreatpercentile(wt_power[ar.shape[0]/4*1:ar.shape[0]/4*3].flatten(),95)
     #print vmin,vmax,ar.shape[0]/4*1,ar.shape[0]/4*3
-    p.imshow(wt_power.T,aspect="auto",origin="lower",interpolation="bicubic",extent=[9.95,1009.5,0.05,1.475],vmin=vmin,vmax=vmax)
+    #p.imshow(wt_power.T,aspect="auto",origin="lower",interpolation="bicubic",extent=[9.95,1009.5,0.05,1.475],vmin=vmin,vmax=vmax)
     #p.colorbar()
-    p.xlim(10,1009)
+    #p.xlim(10,1009)
     

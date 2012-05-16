@@ -2,7 +2,7 @@ import numpy as np
 import time
 from numpy.testing import (assert_array_almost_equal,
                                    assert_array_equal)
-from nose.tools import assert_true, assert_equal, assert_raises
+from nose.tools import assert_true, assert_equal, assert_raises, raises
 from eegpy.helper import fconv, nextpow2
 
 def test_fconv_for_random_arrays():
@@ -43,8 +43,19 @@ def test_fconv_returns_double_when_input_is_double():
     assert_true(res.dtype==np.double)
 
 def test_nextpow2():
-    for x, np2 in [(3,4),(5,8),(33,64),(170,256)]:
-        yield check_nextpow2, x, np2
+    for x, np2 in [(0,0),(2,2),(3,4),(5,8),(33,64),(170,256)]:
+        yield _check_nextpow2, x, np2
 
-def check_nextpow2(x,np2):
+def _check_nextpow2(x,np2):
     return nextpow2(x)==np2
+
+def test_nextpow2_float():
+    for x, np2 in [(1.8,2),(19.1,32),(63.0,64),(78.4,128)]:
+        yield _check_nextpow2, x, np2
+
+@raises(ValueError)
+def test_nextpow2_negative_x():
+    nextpow2(-1)
+
+def test_is_power_of_2():
+    pass
