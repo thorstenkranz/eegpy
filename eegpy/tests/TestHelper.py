@@ -3,7 +3,7 @@ import time
 from numpy.testing import (assert_array_almost_equal,
                                    assert_array_equal)
 from nose.tools import assert_true, assert_equal, assert_raises, raises
-from eegpy.helper import fconv, nextpow2
+from eegpy.helper import fconv, nextpow2, is_power_of_2
 
 def test_fconv_for_random_arrays():
     x = np.random.random((128))
@@ -58,4 +58,19 @@ def test_nextpow2_negative_x():
     nextpow2(-1)
 
 def test_is_power_of_2():
-    pass
+    for x, is_pow_2 in [
+            (0,True),
+            (1,True),
+            (2,True),
+            (3,False),
+            (4,True),
+            (256, True),
+            (8., True),
+            (-2, True),
+            (-3,False),
+            ("2",False)]:
+        yield lambda x,y: is_power_of_2(x) == y, x, is_pow_2
+
+@raises(ValueError)
+def test_is_power_of_2_wrong_argument_type():
+    is_power_of_2("abc")

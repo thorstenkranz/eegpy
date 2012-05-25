@@ -86,6 +86,10 @@ def is_power_of_2(x):
 
     Cp.: http://graphics.stanford.edu/~seander/bithacks.html#DetermineIfPowerOf2
     """
+    try:
+        int(x)
+    except:
+        raise ValueError("Cannot convert to int")
     if not int(x) == x:
         return False
     x = int(x)
