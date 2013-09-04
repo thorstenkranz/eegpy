@@ -11,6 +11,7 @@ shown.
 
    installation
    tutorial/main
+   examples/main
    modules
 
 ======================= 

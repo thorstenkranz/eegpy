@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-.. module:: useful_1
+.. module:: eegpy.misc
    :platform: Unix, Windows, OSX
    :synopsis: A useful module indeed.
 
@@ -12,7 +12,7 @@
 
 import pickle
 
-debug = True #Contols wether extensive debugging-information is printed to stdout or plotted
+debug = False #Contols wether extensive debugging-information is printed to stdout or plotted
 show_progressbar = True #Show progess-bar for long running tasks.
 
 class EegpyBase(object):

@@ -29,7 +29,7 @@ help:
 	@echo "  doctest   to run all doctests embedded in the documentation (if enabled)"
 
 clean:
-	-rm -rf $(BUILDDIR) source/generated source/examples
+	-rm -rf $(BUILDDIR) source/generated
 	-rm generate-stamp
 
 
@@ -49,6 +49,10 @@ html: generate
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
+	@echo
+	@echo "Zipping html"
+	@rm $(BUILDDIR)/eegpy_documentation.zip
+	@cd $(BUILDDIR)/html; zip -rq ../eegpy_documentation.zip *;
 
 dirhtml: generate
 	$(SPHINXBUILD) -b dirhtml $(ALLSPHINXOPTS) $(BUILDDIR)/dirhtml

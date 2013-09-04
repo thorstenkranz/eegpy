@@ -3,9 +3,14 @@
 
 """My first try of building a small dialog for editing filenames."""
 
-from enthought.traits.api import HasTraits, List, Str    
-from enthought.traits.ui.api import View, Item, ListEditor
-from enthought.traits.ui.menu import OKButton, CancelButton, RevertButton, UndoButton
+try:
+    from enthought.traits.api import HasTraits, List, Str    
+    from enthought.traits.ui.api import View, Item, ListEditor, Group
+    from enthought.traits.ui.menu import OKButton, CancelButton, RevertButton, UndoButton
+except ImportError:
+    from traits.api import HasTraits, List, Str    
+    from traitsui.api import View, Item, ListEditor, Group
+    from traitsui.menu import OKButton, CancelButton, RevertButton, UndoButton
 
 class ChannelNamesEditor ( HasTraits ):
     """ChannelNamesEditor
@@ -13,9 +18,12 @@ class ChannelNamesEditor ( HasTraits ):
     # THE trait-attribute to change
     channel_names = List( Str )
     view = View(
-        Item( 'channel_names@',
-              #show_label = False,
-              editor = ListEditor(style="text")
+        Group(
+            Item( 'channel_names@',
+                  show_label = False,
+                  editor = ListEditor(style="text")
+            ),
+            label="Channel names:"
         ), 
         title     = 'Editing channel-names',
         width     = 0.5,

@@ -2,20 +2,13 @@
 # -*- coding: utf8 -*-
 import struct
 import os
-#import Gnuplot
-import time
 import StringIO
 import tempfile
 
 import numpy as n
-from scipy.signal import butter
+#from scipy.signal import butter
 
 from eegpy.formats.iobase import EEG_file
-#import matplotlib.cm as cm
-#import pywt
-#import pylab
-
-#fn="/home/thorsten/f32/1.f32"    
 
 fmtF32header = "= 21p 7p i i H i d d d 13p i H f f 931p"
 #Erklaerung
@@ -132,7 +125,13 @@ It uses numpy.memmap for rapid read/write"""
           
     def __del__(self):
         self.close()
-        
+    
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type_, value, traceback):
+        self.close()
+    
     def __str__(self):
         rv = StringIO.StringIO()
         ks_header = self.header.keys()
@@ -151,7 +150,15 @@ It uses numpy.memmap for rapid read/write"""
         if self._mm != None:
             self._mm.flush()
             del self._mm
-            self._mm = None#.close()
+            self._mm = None
+    
+    @property
+    def is_open(self):
+        if self._mm is None:
+            return False
+        if type(self._mm)==n.memmap:
+            return True
+        return False
                     
     def __getitem__(self,item):
         #for retrieving data from the memmap-object
@@ -180,7 +187,7 @@ It uses numpy.memmap for rapid read/write"""
     
     def getOverviewData(self, numPoints, channelList = None):
         if(numPoints > self.numDatapoints):
-            raise Exception, "So viele Datenpunkte sind nicht in der Datei vorhanden."
+            raise ValueError("To many datapoints for overview data were requested.")
         # Keine channelList übergeben
         if (channelList == None):
             channelList = range(self.numChannels)
@@ -241,8 +248,15 @@ It uses numpy.memmap for rapid read/write"""
         self.f.close()
         self._mm = n.memmap(self._fn,dtype=n.float32,offset=self.header["sbData"],shape=self._shape,mode="r+")
             
+    @property
+    def Fs(self):
+        """Sampling rate of recording. 
+
+        .. hint::
+            The F32-format doesn' allow per-channel sampling rates."""
+        return self.get_samplRate()
+
     samplRate = property(get_samplRate)
-    Fs = property(get_samplRate)
     num_datapoints = property(get_num_datapoints)
     numDatapoints = property(get_num_datapoints)
     channel_names = property(get_channel_names, set_channel_names)
@@ -292,7 +306,5 @@ class F32filteredWithCache(F32):
         except Exception,e:
             print "Cannot remove file %s"%self._fn, e
 
-if __name__=='__main__':
-    #TODO: make some examples
-    pass
+
     

@@ -5,11 +5,12 @@
 
 from __future__ import with_statement
 import os.path
-import pickle
 import copy
 
 import eegpy
 from eegpy.misc import FATALERROR, EegpyBase, debug
+import logging
+logger = logging.getLogger(__name__)
 
 try:
     import numpy as n
@@ -37,8 +38,7 @@ class EventTable(EegpyBase):
         #self._offset = 0
         #self._factor = 1 
         success = False
-        if debug:
-            print "EventTable.__init__"
+        logger.debug("EventTable.__init__")
         if x==None:
             success=True
         if not success:
@@ -64,7 +64,7 @@ class EventTable(EegpyBase):
                     #TODO: Check if structure of dict is o.k.
                     for k in x.keys():
                         it = iter(x[k]) #If x[k] is not iterable, it raises an error
-                    self._ur_eventdict = x
+                    self._ur_eventdict = copy.deepcopy(x)
                     success = True
             except Exception, e:
                 pass
@@ -87,11 +87,7 @@ class EventTable(EegpyBase):
             raise ValueError("Construction of EventTable from given variable failed")            
         
         
-        #TODO: importing from arrays or different filetypes
-        
-        
-        all_events = property(self.get_all_events)
-    
+        #TODO: importing from arrays or different filetypes    
     
 ### Transformations-stuff    
     #numerical operators will set _offset and _factor
@@ -262,6 +258,8 @@ class EventTable(EegpyBase):
             all_events += [self._transform(y) for y in self._ur_eventdict[k]]
         all_events.sort()
         return all_events
+        
+    all_events = property(get_all_events)
     
     def get_all_events_with_keys(self):
         """Gets all event timepoints together with keys, sorted by time"""
