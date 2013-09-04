@@ -1,0 +1,6 @@
+*.pyc
+*.swp
+build
+doc/build
+doc/generate-stamp
+doc/source/generated
