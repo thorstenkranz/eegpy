@@ -11,12 +11,12 @@ If not, the source of the data is mentioned.
 
 
 .. toctree::
-	:maxdepth: 2
+    :maxdepth: 2
     :hidden:
 	
     using_F32
-	erp
-	wavelet_power
+    erp
+    wavelet_power
 
 Reading and writing the F32 data format
 ===========================================================
@@ -35,7 +35,7 @@ and wants to analyse the event-related potentials. In :ref:`this section
 <examples_erp>` we show how to do this in eegpy.
 
 Analysing temporal and spectral fluctuations of power in a signal
-================================================================
+===================================================================
 
 Morlet wavelets are commonly used to get some insight on the temporal and
 spectral properties of a signal. Also for this application we 

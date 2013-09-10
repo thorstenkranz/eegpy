@@ -51,7 +51,7 @@ html: generate
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
 	@echo
 	@echo "Zipping html"
-	@rm $(BUILDDIR)/eegpy_documentation.zip
+	@rm -f $(BUILDDIR)/eegpy_documentation.zip
 	@cd $(BUILDDIR)/html; zip -rq ../eegpy_documentation.zip *;
 
 dirhtml: generate
