@@ -7,7 +7,7 @@ Examples
 In this section we'll show some examples of using eegpy. Usually, they 
 are self-contained, i.e. necessary data are being generated artificially.
 
-If not, the source of the data is mentioned.
+If  not, the source of the data is mentioned.
 
 
 .. toctree::
