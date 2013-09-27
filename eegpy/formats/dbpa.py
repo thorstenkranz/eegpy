@@ -14,21 +14,26 @@ class DBPA(EEG_file):
     """Access to Sensorium DBPA datafiles
     """
 
-    header = {"formatName":"Bonn F32 Data Format",
+    header = {"formatName":"Sensorium DBPA",
               "formatVer":"1.0.00",
-              "sbChinfo":1024, # Weil header 1024 bytes hat
-              "sbData":None,
+              "sbChinfo":None,
+              "sbData":None, #offset into data file?
               "numChannels":0,
               "numDatapoints":0,
               "samplRate":1.0,
               "tStart":0.0,
               "tEnd":0.0,
               "reservedString":"",
-              "datatype":4096,
-              "samplesize":17533,
+              "datatype":'>f', # data are big-endian float32
+              "samplesize":4, # 4 bytes per sample?
               "minsample":0.0,
               "maxsample":0.0,
-              "reserved2":""}
+              "reserved2":"",
+              "eventChannels":[0],
+              "responseChannels":[1],
+              "eyeChannels": range(2,119),
+              "dataChannels": range(2,119),
+              }
     reserved3 = ""
     fmtSample = "", # Format-String für einzelnes Sample
     #(self.formatName,self.formatVer,self.sbChinfo,self.sbData,self.numChannels,self.numDatapoints,self.samplRate,self.tStart,self.tEnd,self.reservedString, self.datatype, self.samplesize, self.minsample, self.maxsample,self.reserved2) = struct.unpack(fmtF32header,s)
@@ -38,39 +43,26 @@ class DBPA(EEG_file):
     headerWritten = False
     _mm = None #memmap-object
 
-    def __init__(self,filename,mode="r+",cNames=None,shape=None, Fs = 1000.0):
+    def __init__(self,filename,mode="r+",cNames=None,shape=None, Fs = 1000.0, numChannels=128):
         assert mode in ["r","r+","w+"], "Unsupported mode"
         self._fn = filename
 
         try:
             self.f = open(self._fn, mode)
         except:
-            raise IOError, "Die angegebene Datei konnte nicht geöffnet werden!"
+            raise IOError, "Failed to open file '%s'" %filename
 
         self._mode = mode
         if mode in ["r","r+"]:
-            s = self.f.read(struct.calcsize(fmtF32header))
-            (self.header["formatName"],self.header["formatVer"],self.header["sbChinfo"],self.header["sbData"],self.header["numChannels"],self.header["numDatapoints"],self.header["samplRate"],self.header["tStart"], self.header["tEnd"], self.header["reservedString"], self.header["datatype"], self.header["samplesize"], self.header["minsample"], self.header["maxsample"],self.header["reserved2"]) = struct.unpack(fmtF32header,s)
-
-            self.numChannels=self.header["numChannels"]
-            #print self.numChannels
-            if self.numChannels > 500 or self.numChannels < 1:
-                raise Exception, "The chosen file is either in an unrecognized format or corrupt!"
-            if self.header["sbData"] != (struct.calcsize(fmtF32header)+self.numChannels*struct.calcsize(fmtF32channelinfo)):
-                print "Der Wert für das Anfangsbyte der Daten war falsch gesetzt. Korrigiere..."
-                self.sbData = (struct.calcsize(fmtF32header)+self.numChannels*struct.calcsize(fmtF32channelinfo))
-            self.fmtSample = "= %if" % self.numChannels
-            self._channel_names = []
-            self._channel_units = []
-            for i in range(0,self.numChannels):
-                s = self.f.read(struct.calcsize(fmtF32channelinfo))
-                (chName, chUnit, reserved3) = struct.unpack(fmtF32channelinfo,s)
-                self._channel_names.append(chName)
-                self._channel_units.append(chUnit)
+            #work out duration/samples etc
+            header['numChannels'] = self.numChannels = numChannels
+            header['samplRate'] = self.Fs = Fs
+            fileSize = os.stat(filename).st_size
+            header['numDatapoints'] = int(fileSize/self.info['channels']/4)
+            header['tEnd'] = header['numDatapoints']/Fs
             self._shape = (self.header["numDatapoints"],self.header["numChannels"])
-            #FIXED: closinf self.f before opening memmap.
-            self.f.close()
-            self._mm = n.memmap(self._fn,dtype=n.float32,offset=self.header["sbData"],shape=self._shape,mode=mode)
+            #ready to load file as memmap with known shape
+            self._mm = n.memmap(self._fn,dtype=self.header["datatype"],offset=self.header["sbData"],shape=self._shape,mode=mode)
         elif mode=="w+":
             assert shape != None, "Shape must be given."
             assert len(shape) == 2, "Only 2d is possible"
