@@ -17,7 +17,7 @@ class DBPA(EEG_file):
     header = {"formatName":"Sensorium DBPA",
               "formatVer":"1.0.00",
               "sbChinfo":None,
-              "sbData":None, #offset into data file?
+              "sbData":0, #offset into data file?
               "numChannels":0,
               "numDatapoints":0,
               "samplRate":1.0,
@@ -31,8 +31,8 @@ class DBPA(EEG_file):
               "reserved2":"",
               "eventChannels":[0],
               "responseChannels":[1],
-              "eyeChannels": range(2,119),
               "dataChannels": range(2,119),
+              "eyeChannels": range(119,122),
               }
     reserved3 = ""
     fmtSample = "", # Format-String für einzelnes Sample
@@ -43,10 +43,9 @@ class DBPA(EEG_file):
     headerWritten = False
     _mm = None #memmap-object
 
-    def __init__(self,filename,mode="r+",cNames=None,shape=None, Fs = 1000.0, numChannels=128):
+    def __init__(self,filename,mode="r+",cNames=None,shape=None, Fs = 1000.0, numChannels=122):
         assert mode in ["r","r+","w+"], "Unsupported mode"
         self._fn = filename
-
         try:
             self.f = open(self._fn, mode)
         except:
@@ -55,14 +54,15 @@ class DBPA(EEG_file):
         self._mode = mode
         if mode in ["r","r+"]:
             #work out duration/samples etc
-            header['numChannels'] = self.numChannels = numChannels
-            header['samplRate'] = self.Fs = Fs
+            self.header['numChannels'] = self.numChannels = numChannels
+            self.header['samplRate'] = Fs
             fileSize = os.stat(filename).st_size
-            header['numDatapoints'] = int(fileSize/self.info['channels']/4)
-            header['tEnd'] = header['numDatapoints']/Fs
+            self.header['numDatapoints'] = int(fileSize/self.header['numChannels']/4)
+            self.header['tEnd'] = self.header['numDatapoints']/Fs
             self._shape = (self.header["numDatapoints"],self.header["numChannels"])
             #ready to load file as memmap with known shape
-            self._mm = n.memmap(self._fn,dtype=self.header["datatype"],offset=self.header["sbData"],shape=self._shape,mode=mode)
+            self._mm = n.memmap(self._fn, dtype =self.header["datatype"], offset=self.header["sbData"], shape=self._shape, mode=mode)
+            # self._mm = n.fromfile(self._fn,dtype=n.float32)
         elif mode=="w+":
             assert shape != None, "Shape must be given."
             assert len(shape) == 2, "Only 2d is possible"
@@ -99,7 +99,7 @@ class DBPA(EEG_file):
         rv = StringIO.StringIO()
         ks_header = self.header.keys()
         ks_header.sort()
-        print >>rv, "eegpy F32-object\n----------------\n"
+        print >>rv, "eegpy DBPA-object\n----------------\n"
         print >>rv, "Header-Information:"
         for k in ks_header:
             print >>rv, "%s: %s" %(str(k),str(self.header[k]))
@@ -140,7 +140,7 @@ class DBPA(EEG_file):
         else:
             channelList.sort()
             if (channelList[0]<0 or channelList[-1]>(self.numChannels-1)):
-                raise Exception, "Channellist contains illegal channel-number.\min=%i, max=%%i" %(channelList[0],channelList[-1])
+                raise Exception, "channelList contains illegal channel-number.\min=%i, max=%i" %(channelList[0],channelList[-1])
             for c in channelList:
                 arb[c] = True
 
@@ -156,7 +156,7 @@ class DBPA(EEG_file):
             channelList = range(self.numChannels)
         channelList.sort()
         if (channelList[0]<0 or channelList[-1]>(self.numChannels-1)):
-            raise Exception, "Kanalliste enthaelt falsche Kanalnummern.\min=%i, max=%%i" %(channelList[0],channelList[-1])
+            raise Exception, "Kanalliste enthaelt falsche Kanalnummern.\min=%i, max=%i" %(channelList[0],channelList[-1])
         #Waehle geeignete Parameter und rufe damit getData auf
         #start=0, length=numPoints, stride=?
         stride = self.numDatapoints / numPoints
@@ -164,26 +164,8 @@ class DBPA(EEG_file):
 
 
     def writeHeader(self):
-        """Writing the header"""
-        #Preparation: chNames setzen, falls leer
-        if self._channel_names == None:
-            self._channel_names = ["%i"%(i+1) for i in range(self._shape[1])]
-            self.numChannels = len(self._channel_names)
-        #Preparation: chUnits setzen, falls leer
-        if self._channel_units == None:
-            self._channel_units = ["" for i in self._channel_names]
-
-        self.f.seek(0)
-        s=struct.pack(fmtF32header, self.header["formatName"],self.header["formatVer"],int(self.header["sbChinfo"]),self.header["sbData"],self.header["numChannels"],self.header["numDatapoints"],self.header["samplRate"],self.header["tStart"],self.header["tEnd"],self.header["reservedString"], self.header["datatype"], self.header["samplesize"], self.header["minsample"], self.header["maxsample"],self.header["reserved2"])
-        self.f.write(s)
-        for i in range(len(self._channel_names)):
-            #print len(self._channel_names), i
-            s=struct.pack(fmtF32channelinfo, self._channel_names[i], self._channel_units[i], self.reserved3)
-            self.f.write(s)
-
-        if(not (self.f.tell()==self.header["sbData"])):
-            raise Exception, "Irgendwie ist die Position falsch, %i != %i" % (self.f.tell(),self.header["sbData"])
-        self.headerWritten = True
+        """Writing the header - willl need to be done if we want to export DBPA as F32"""
+        raise NotImplementedError
 
     def get_samplRate(self):
         return self.header["samplRate"]
@@ -199,7 +181,7 @@ class DBPA(EEG_file):
 
     def set_channel_names(self, cns):
         assert len(cns) == self.shape[1], "List of channelnames must contain exactly %i elements" % self.shape[1]
-        assert self._mode in ["r+", "w+"], "Cannot set channel_names: F32 is read-only"
+        assert self._mode in ["r+", "w+"], "Cannot set channel_names: file is read-only"
         try:
             del self._mm
             self._mm = None
@@ -225,10 +207,10 @@ class DBPA(EEG_file):
     channel_names = property(get_channel_names, set_channel_names)
     channelNames = property(get_channel_names)
 
-class F32filtered(F32):
-    """F32 read-only object with included frequency-filteres"""
+class DBPAfiltered(DBPA):
+    """DBPA read-only object with included frequency-filters"""
     def __init__(self,filename,filter_function):
-        F32.__init__(self,filename,"r+")
+        DBPA.__init__(self,filename,"r+")
         self._filter_function = filter_function
 
     @property
@@ -237,30 +219,15 @@ class F32filtered(F32):
 
     def __getitem__(self,item):
         """Calls method of super-class, filters the return value"""
-        return self.ff(F32.__getitem__(self,item))
+        return self.ff(DBPA.__getitem__(self,item))
 
-class F32ReaderFiltered(F32Reader):
-    """F32 read-only object with included frequency-filteres.
-    Uses old F32Reader, without memmap."""
-    def __init__(self,filename,filter_function):
-        F32Reader.__init__(self,filename)
-        self._filter_function = filter_function
-
-    @property
-    def ff(self):
-        return self._filter_function
-
-    def getData(self,start,length,stride=1,channelList = None):
-        """Calls method of super-class, filters the return value"""
-        return self.ff(F32Reader.getData(self,start,length,stride,channelList))
-
-class F32filteredWithCache(F32):
-    """F32 read-only object with included frequency-filteres"""
+class DBPAFilteredWithCache(DBPA):
+    """DBPA read-only object with included frequency-filteres"""
     def __init__(self,filename,btype='lp',fl=None,fh=None,border=2,filter_windowed=False,dirname=None):
         from eegpy.ui.eegpylab import freqfilt_eeg
         fd, tmpfn = tempfile.mkstemp(dir=dirname)
         freqfilt_eeg(filename,tmpfn,btype,fl,fh,border,filter_windowed)
-        F32.__init__(self,tmpfn)
+        DBPA.__init__(self,tmpfn)
 
     def __del__(self):
         self.close()
