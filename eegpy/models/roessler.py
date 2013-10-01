@@ -27,7 +27,7 @@ def roessler_ode(y,t,omega=1,a=0.165,b=0.2,c=10):
     return dy
 
 class Roessler(object):
-    """A single coupled Roessler oscillators"""
+    u"""A single coupled Rössler oscillators"""
     def __init__(self, y=None, omega=1.0, a=0.165,b=0.2,c=10):
         self.omega = omega
         self.a = a
@@ -48,7 +48,7 @@ class Roessler(object):
         return rv
 
 class TwoRoessler(object):
-    """Two coupled Rössler oscillators"""
+    u"""Two coupled Rössler oscillators"""
     def __init__(self, y=None, omega1=1.03, omega2=0.97, e1=0, e2=0, a1=0.165, a2=0.165, b1=0.2, b2=0.2, c1=10, c2=10):
         self.omega1 = omega1
         self.omega2 = omega2
@@ -79,7 +79,7 @@ class TwoRoessler(object):
         return rv
         
 class NRoessler(object):
-    """Implements a network of N coupled Rössler oscillators"""
+    u"""Implements a network of N coupled Rössler oscillators"""
     def __init__(self, omegasOrN = None, es=None, as_=None, bs=None, cs=None):
         if omegasOrN == None and es == None:
             raise ValueError("I need either omegas, epsilons or number of oscillators to go on.")
