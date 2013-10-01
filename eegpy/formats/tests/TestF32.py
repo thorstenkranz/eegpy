@@ -5,7 +5,7 @@ from numpy.testing import (assert_array_almost_equal,
                                    assert_array_equal)
 from nose.tools import assert_true, assert_equal, assert_false
 from tempfile import mktemp
-from eegpy import F32
+from eegpy.formats.f32 import F32, F32filtered
 
 from eegpy.temp import UnlinkingTempfile
 
@@ -54,6 +54,16 @@ def test_Fs_is_persisted():
         eeg2 = F32(tmp_fn)
         assert_equal(Fs, eeg2.Fs)
 
+def test_filtered_reading():
+    with UnlinkingTempfile(".f32") as tmp_fn:
+	data = np.random.random((100,1))
+        eeg = F32(tmp_fn, "w+", shape=data.shape)
+        eeg[:,:] = data
+        eeg.close()
+        
+	eeg_filtered = F32filtered(tmp_fn, lambda x: 3*x)
+	read_data = eeg_filtered[:]
 
+        assert_array_almost_equal(data, read_data/3)
 
 

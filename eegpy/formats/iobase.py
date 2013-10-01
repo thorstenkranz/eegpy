@@ -9,7 +9,7 @@ from eegpy.misc import FATALERROR, debug
 #from eegpy.events import EventTable
 
 try:
-    import numpy as n
+    import numpy as np
 except ImportError:
     raise FATALERROR('SciPy or NumPy not found!\nPlease visit www.scipy.org or numeric.scipy.org for more information.')
     
@@ -46,8 +46,8 @@ class EEG_file(object):
         if (channels == None):
             channels = range(self.num_channels)
         channels.sort()
-        rv = n.zeros((end-start,len(channels),len(event_list)),"d")
-        arb = n.zeros((self.num_channels),n.bool)
+        rv = np.zeros((end-start,len(channels),len(event_list)),"d")
+        arb = np.zeros((self.num_channels),np.bool)
         for c in channels:
             arb[c]=True
                      
@@ -97,7 +97,7 @@ class EEG_file(object):
         if overlap==None:
             overlap=0
         start = 0
-        ch_bs = n.zeros((self.num_channels),n.bool)
+        ch_bs = np.zeros((self.num_channels),np.bool)
         for ch in channels:
             ch_bs[ch] = True
         if not threads:
@@ -173,13 +173,158 @@ class EEG_file(object):
     channel_names = property(get_channel_names, set_channel_names)
     channelNames = property(get_channel_names)
     fn = property(get_filename)
-        
-        
-        
-        
-    
     #TODO: Add functions for direct access to attributes like numChannels etc. 
+
+class MemoryMappedBinaryDataFile(EEG_file): 
+    _mm = None #memmap-object
+    
+    def __init__(self, filename, mode, shape, data_offset=0, dtype="f", Fs = 1000.0, 
+                 channel_names = None):
+        assert mode in ["r","r+","w+"], "Unsupported mode"
+        self._fn = filename
+        
+        try:
+            self.f = open(self._fn, mode)
+        except:
+            raise IOError, "The file could not be opened!"
+        
+        assert shape != None, "Shape must be given."
+        self._mode = mode
+#        if mode in ["r","r+"]:
+        if any(np.array(shape) < 1):
+            raise ValueError("Only values > 0 are allowed for number of channels and number of datapoints.")
+        self._shape = shape
+        if channel_names is not None:
+            if len(channel_names) != shape[1]:
+                raise ValueError("Lengths of channel names and memmap shape 1 should match.")
+            self.set_channel_names(channel_names)
+        else:
+            self.set_channel_names([str(x+1) for x in range(shape[1])])  
+        self._data_offset = data_offset
+        self._Fs = Fs
+        self._dtype = dtype
+        self._mode = mode
+        self._open_memmap()
+        
+    def _open_memmap(self):
+        self._mm = np.memmap(self._fn,dtype=self._dtype,offset=self._data_offset,
+                             shape=self._shape,mode=self._mode)
+        
+    def _reopen_memmap(self):
+        mm_mode = "r" if self._mode == "r" else "r+"
+        self._mm = np.memmap(self._fn,dtype=self._dtype,offset=self._data_offset,
+                             shape=self._shape,mode=mm_mode)
+          
+    def __del__(self):
+        self.close()
+    
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type_, value, traceback):
+        self.close()
+    
+    def __str__(self):
+        return "Memory-mapped data file at %s" % self._fn
+ 
+    def close(self):
+        self.f.close()
+        if self._mm != None:
+            self._mm.flush()
+            del self._mm
+            self._mm = None
+    
+    @property
+    def is_open(self):
+        if self._mm is None:
+            return False
+        if type(self._mm)==np.memmap:
+            return True
+        return False
+                    
+    def __getitem__(self,item):
+        #for retrieving data from the memmap-object
+        return self._mm.__getitem__(item)
+    
+    def __setitem__(self,key,item):
+        return self._mm.__setitem__(key,item)
+    
+    def getData(self, start, length, stride=1, channelList = None):
+        """For conformity with older classes.
+        Now uses boolean indexing"""
+        # No channelList given
+        if (channelList == None):
+            arb = np.ones((self.shape[1]),np.bool)
+        else:
+            arb = np.zeros((self.shape[1]),np.bool)
+            channelList.sort()
+            if (channelList[0]<0 or channelList[-1]>(self.numChannels-1)):
+                raise ValueError("Channellist contains illegal channel-number.\nmin=%i, max=%%i" %(channelList[0],channelList[-1])) 
+            for c in channelList:
+                arb[c] = True
+
+        tmpData = self[start:start+(length*stride):stride,:]
+        rv = tmpData[:,arb]
+        return rv
+    
+    def getOverviewData(self, numPoints, channelList = None):
+        if(numPoints > self.numDatapoints):
+            raise ValueError("To many datapoints for overview data were requested.")
+        # Keine channelList übergeben
+        if (channelList == None):
+            channelList = range(self.numChannels)
+        channelList.sort()
+        if (channelList[0]<0 or channelList[-1]>(self.numChannels-1)):
+            raise Exception, "Kanalliste enthaelt falsche Kanalnummern.\min=%i, max=%%i" %(channelList[0],channelList[-1]) 
+        #Waehle geeignete Parameter und rufe damit getData auf
+        #start=0, length=numPoints, stride=?
+        stride = self.numDatapoints / numPoints
+        return self.getData(0,numPoints,stride,channelList)
+        
+    def get_samplRate(self):
+        return self._Fs
+    
+    def get_num_datapoints(self):
+        return self._shape[0]
+    
+    def get_channel_names(self):
+        return self._channel_names
+    
+    def getChannelNames(self):
+        return self._channel_names
+    
+    def set_channel_names(self, cns):
+        assert len(cns) == self.shape[1], "List of channelnames must contain exactly %i elements" % self.shape[1]
+        assert self._mode in ["r+", "w+"], "Cannot set channel_names: F32 is read-only"
+        self._channel_names = [str(x) for x in cns]
             
+    @property
+    def Fs(self):
+        """Sampling rate of recording. 
+
+        .. hint::
+            The F32-format doesn' allow per-channel sampling rates."""
+        return self.get_samplRate()
+
+    samplRate = property(get_samplRate)
+    num_datapoints = property(get_num_datapoints)
+    numDatapoints = property(get_num_datapoints)
+    channel_names = property(get_channel_names, set_channel_names)
+    channelNames = property(get_channel_names)     
+
+class EEGfiltered(object):
+    """Object with included frequency-filters"""
+    def __init__(self,filter_function):
+        self._filter_function = filter_function
+
+    @property
+    def ff(self):
+        return self._filter_function
+
+    def __getitem__(self,item):
+        """Calls method of other class, filters the return value.
+        Make sure you also inherit from MemoryMappedBinaryDataFile!"""
+        return self.ff(MemoryMappedBinaryDataFile.__getitem__(self,item))
 
 if __name__=="__main__":
     print "Test speed for moving_windows with and without multithreading"

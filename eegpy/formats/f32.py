@@ -5,10 +5,11 @@ import os
 import StringIO
 import tempfile
 
-import numpy as n
+import numpy as np
 #from scipy.signal import butter
 
-from eegpy.formats.iobase import EEG_file
+from eegpy.formats.iobase import (MemoryMappedBinaryDataFile,
+                    EEGfiltered)
 
 fmtF32header = "= 21p 7p i i H i d d d 13p i H f f 931p"
 #Erklaerung
@@ -37,7 +38,7 @@ fmtF32channelinfo = "= 256p 32p 224p"
 
 from _f32_old import F32Reader, F32Writer, F32WriterAdvanced
  
-class F32(EEG_file):
+class F32(MemoryMappedBinaryDataFile):
     """Access to F32-datafiles
     
 This is the new class used for both read and write access. 
@@ -45,8 +46,8 @@ It uses numpy.memmap for rapid read/write"""
 
     header = {"formatName":"Bonn F32 Data Format",
               "formatVer":"1.0.00",
-              "sbChinfo":1024, # Weil header 1024 bytes hat
-              "sbData":None,
+              "sbChinfo":1024, # Because header has 1024 bytes
+              "sbData":None, # Where the binary data start
               "numChannels":0,
               "numDatapoints":0,
               "samplRate":1.0,
@@ -59,10 +60,6 @@ It uses numpy.memmap for rapid read/write"""
               "maxsample":0.0,
               "reserved2":""}
     reserved3 = ""
-    fmtSample = "", # Format-String für einzelnes Sample
-    #(self.formatName,self.formatVer,self.sbChinfo,self.sbData,self.numChannels,self.numDatapoints,self.samplRate,self.tStart,self.tEnd,self.reservedString, self.datatype, self.samplesize, self.minsample, self.maxsample,self.reserved2) = struct.unpack(fmtF32header,s)
-    #self.fmtSample = "= %if" % self.numChannels
-    #shape = property(self.get_shape)
     dataToWrite = None
     headerWritten = False
     _mm = None #memmap-object
@@ -76,7 +73,6 @@ It uses numpy.memmap for rapid read/write"""
         except:
             raise IOError, "Die angegebene Datei konnte nicht geöffnet werden!"
         
-        self._mode = mode
         if mode in ["r","r+"]:
             s = self.f.read(struct.calcsize(fmtF32header))
             (self.header["formatName"],self.header["formatVer"],self.header["sbChinfo"],self.header["sbData"],self.header["numChannels"],self.header["numDatapoints"],self.header["samplRate"],self.header["tStart"], self.header["tEnd"], self.header["reservedString"], self.header["datatype"], self.header["samplesize"], self.header["minsample"], self.header["maxsample"],self.header["reserved2"]) = struct.unpack(fmtF32header,s)
@@ -86,8 +82,8 @@ It uses numpy.memmap for rapid read/write"""
             if self.numChannels > 500 or self.numChannels < 1:
                 raise Exception, "The chosen file is either in an unrecognized format or corrupt!"
             if self.header["sbData"] != (struct.calcsize(fmtF32header)+self.numChannels*struct.calcsize(fmtF32channelinfo)):
-                print "Der Wert für das Anfangsbyte der Daten war falsch gesetzt. Korrigiere..."
-                self.sbData = (struct.calcsize(fmtF32header)+self.numChannels*struct.calcsize(fmtF32channelinfo))
+                #print "Der Wert für das Anfangsbyte der Daten war falsch gesetzt. Korrigiere..."
+                self.header["sbData"] = (struct.calcsize(fmtF32header)+self.numChannels*struct.calcsize(fmtF32channelinfo))
             self.fmtSample = "= %if" % self.numChannels
             self._channel_names = []
             self._channel_units = []
@@ -99,39 +95,35 @@ It uses numpy.memmap for rapid read/write"""
             self._shape = (self.header["numDatapoints"],self.header["numChannels"])
             #FIXED: closinf self.f before opening memmap.
             self.f.close()
-            self._mm = n.memmap(self._fn,dtype=n.float32,offset=self.header["sbData"],shape=self._shape,mode=mode)
+            
+            shape_from_header = (self.header["numDatapoints"], self.header["numChannels"])
+            MemoryMappedBinaryDataFile.__init__(self, filename, mode, shape_from_header, 
+                            data_offset = self.header["sbData"], 
+                            dtype=np.float32, Fs = self.header["samplRate"],
+                            channel_names=cNames)
         elif mode=="w+":
             assert shape != None, "Shape must be given."
             assert len(shape) == 2, "Only 2d is possible"
-            self._shape = shape
-            self.header["numChannels"] = self._shape[1]
-            self.numChannels = self._shape[1]
             if cNames != None:
-                assert len(cNames)>0, "Liste der Kanalnamen muss länger als 0 sein!"
+                assert len(cNames)>0, "List of channel names must be longer than 0!"
                 assert shape[1] == len(cNames) 
                 self._channel_names = [str(x) for x in cNames]  
-            self.header["sbData"] = int(self.header["sbChinfo"]+self.numChannels*struct.calcsize(fmtF32channelinfo))   
-            self.header["numChannels"] = self._shape[1]
-            self.header["numDatapoints"] = self._shape[0]
+            self.header["sbData"] = int(self.header["sbChinfo"]+shape[1]*struct.calcsize(fmtF32channelinfo))   
+            self.header["numChannels"] = shape[1]
+            self.header["numDatapoints"] = shape[0]
             self.header["samplRate"] = float(Fs)
-            self.f.close()
-            self._mm = n.memmap(self._fn,dtype=n.float32,offset=self.header["sbData"],shape=self._shape,mode=mode)
+            self.f.close()            
+            MemoryMappedBinaryDataFile.__init__(self, filename, mode, shape, 
+                            data_offset = self.header["sbData"], 
+                            dtype=np.float32, Fs = Fs,
+                            channel_names=cNames)
             del self._mm
             self._mm = None
             self.f = open(self._fn, "r+")
             self.writeHeader()
             self.f.close()
-            self._mm = n.memmap(self._fn,dtype=n.float32,offset=self.header["sbData"],shape=self._shape,mode="r+")
-          
-    def __del__(self):
-        self.close()
-    
-    def __enter__(self):
-        return self
+            self._reopen_memmap()
 
-    def __exit__(self, type_, value, traceback):
-        self.close()
-    
     def __str__(self):
         rv = StringIO.StringIO()
         ks_header = self.header.keys()
@@ -144,61 +136,6 @@ It uses numpy.memmap for rapid read/write"""
         for i,c in enumerate(self.channel_names):
             print >>rv, "%3i,%s" % (i,c)
         return rv.getvalue()
-    
-    def close(self):
-        self.f.close()
-        if self._mm != None:
-            self._mm.flush()
-            del self._mm
-            self._mm = None
-    
-    @property
-    def is_open(self):
-        if self._mm is None:
-            return False
-        if type(self._mm)==n.memmap:
-            return True
-        return False
-                    
-    def __getitem__(self,item):
-        #for retrieving data from the memmap-object
-        return self._mm.__getitem__(item)
-    
-    def __setitem__(self,key,item):
-        return self._mm.__setitem__(key,item)
-    
-    def getData(self, start, length, stride=1, channelList = None):
-        """For conformity with older classes.
-        Now uses boolean indexing"""
-        # Keine channelList übergeben
-        arb = n.zeros((self.shape[1]),n.bool)
-        if (channelList == None):
-            arb = n.ones((self.shape[1]),n.bool)
-        else:
-            channelList.sort()
-            if (channelList[0]<0 or channelList[-1]>(self.numChannels-1)):
-                raise Exception, "Channellist contains illegal channel-number.\min=%i, max=%%i" %(channelList[0],channelList[-1]) 
-            for c in channelList:
-                arb[c] = True
-
-        tmpData = self[start:start+(length*stride):stride,:]
-        rv = tmpData[:,arb]
-        return rv
-    
-    def getOverviewData(self, numPoints, channelList = None):
-        if(numPoints > self.numDatapoints):
-            raise ValueError("To many datapoints for overview data were requested.")
-        # Keine channelList übergeben
-        if (channelList == None):
-            channelList = range(self.numChannels)
-        channelList.sort()
-        if (channelList[0]<0 or channelList[-1]>(self.numChannels-1)):
-            raise Exception, "Kanalliste enthaelt falsche Kanalnummern.\min=%i, max=%%i" %(channelList[0],channelList[-1]) 
-        #Waehle geeignete Parameter und rufe damit getData auf
-        #start=0, length=numPoints, stride=?
-        stride = self.numDatapoints / numPoints
-        return self.getData(0,numPoints,stride,channelList)
-        
         
     def writeHeader(self):
         """Writing the header"""
@@ -221,61 +158,27 @@ It uses numpy.memmap for rapid read/write"""
         if(not (self.f.tell()==self.header["sbData"])):
             raise Exception, "Irgendwie ist die Position falsch, %i != %i" % (self.f.tell(),self.header["sbData"])
         self.headerWritten = True
-
-    def get_samplRate(self):
-        return self.header["samplRate"]
-    
-    def get_num_datapoints(self):
-        return self.header["numDatapoints"]
-    
-    def get_channel_names(self):
-        return self._channel_names
-    
-    def getChannelNames(self):
-        return self._channel_names
-    
+ 
     def set_channel_names(self, cns):
         assert len(cns) == self.shape[1], "List of channelnames must contain exactly %i elements" % self.shape[1]
         assert self._mode in ["r+", "w+"], "Cannot set channel_names: F32 is read-only"
         try:
             del self._mm
             self._mm = None
-        except Exception, e:
+        except Exception:
             pass
         self._channel_names = [str(x) for x in cns]
         self.f = open(self._fn, "r+")
         self.writeHeader()
         self.f.close()
-        self._mm = n.memmap(self._fn,dtype=n.float32,offset=self.header["sbData"],shape=self._shape,mode="r+")
-            
-    @property
-    def Fs(self):
-        """Sampling rate of recording. 
-
-        .. hint::
-            The F32-format doesn' allow per-channel sampling rates."""
-        return self.get_samplRate()
-
-    samplRate = property(get_samplRate)
-    num_datapoints = property(get_num_datapoints)
-    numDatapoints = property(get_num_datapoints)
-    channel_names = property(get_channel_names, set_channel_names)
-    channelNames = property(get_channel_names)
+        self._mm = np.memmap(self._fn,dtype=np.float32,offset=self.header["sbData"],shape=self._shape,mode="r+")
         
-class F32filtered(F32):
+class F32filtered(EEGfiltered, F32):
     """F32 read-only object with included frequency-filteres"""
-    def __init__(self,filename,filter_function):
-        F32.__init__(self,filename,"r+")
-        self._filter_function = filter_function
+    def __init__(self,filename,filter_function, **kw_args):
+        F32.__init__(self,filename,"r+", **kw_args)
+        EEGfiltered.__init__(self, filter_function)
 
-    @property
-    def ff(self):
-        return self._filter_function
-
-    def __getitem__(self,item):
-        """Calls method of super-class, filters the return value"""
-        return self.ff(F32.__getitem__(self,item))
-    
 class F32ReaderFiltered(F32Reader):
     """F32 read-only object with included frequency-filteres. 
     Uses old F32Reader, without memmap."""
@@ -306,5 +209,5 @@ class F32filteredWithCache(F32):
         except Exception,e:
             print "Cannot remove file %s"%self._fn, e
 
-
+__all__ = ["F32", "F32filtered", "F32Reader", "F32ReaderFiltered", "F32filteredWithCache", "F32Writer", "F32WriterAdvanced"]
     
