@@ -11,4 +11,4 @@ install:
     - python setup.py build
     - python setup.py install
 # command to run tests, e.g. python setup.py test
-script:  nosetests .
+script:  nosetests eegpy/tests
